@@ -1,6 +1,7 @@
 // =====================================================
 // RackSim 3D
-// Improved Visibility Version
+// Server Rack Cabinet - Cabinet Design Only
+// Three.js r128
 // =====================================================
 
 
@@ -10,7 +11,7 @@
 
 const scene = new THREE.Scene();
 
-scene.background = new THREE.Color(0x0b0d14);
+scene.background = new THREE.Color(0xffffff);
 
 
 // =====================================================
@@ -18,16 +19,15 @@ scene.background = new THREE.Color(0x0b0d14);
 // =====================================================
 
 const camera = new THREE.PerspectiveCamera(
-    50,
+    45,
     window.innerWidth / window.innerHeight,
     0.1,
     1000
 );
 
-camera.position.set(4, 2.2, 7);
+camera.position.set(5.5, 3.2, 8);
 
-// مهم جداً: توجيه الكاميرا إلى منتصف الـ Rack
-camera.lookAt(0, 0, 0);
+camera.lookAt(0, 0.2, 0);
 
 
 // =====================================================
@@ -49,6 +49,9 @@ renderer.setPixelRatio(
 
 renderer.shadowMap.enabled = true;
 
+renderer.shadowMap.type =
+    THREE.PCFSoftShadowMap;
+
 document.body.appendChild(
     renderer.domElement
 );
@@ -58,308 +61,825 @@ document.body.appendChild(
 // 4. Lighting
 // =====================================================
 
-// إضاءة عامة
-const ambientLight = new THREE.AmbientLight(
-    0xffffff,
-    1.0
-);
+const ambientLight =
+    new THREE.AmbientLight(
+        0xffffff,
+        1.8
+    );
 
 scene.add(ambientLight);
 
 
-// إضاءة رئيسية من الأمام
-const frontLight = new THREE.DirectionalLight(
-    0xffffff,
-    2.0
-);
+const mainLight =
+    new THREE.DirectionalLight(
+        0xffffff,
+        2.5
+    );
 
-frontLight.position.set(
-    4,
-    6,
+mainLight.position.set(
+    5,
+    8,
     8
 );
 
-frontLight.castShadow = true;
+mainLight.castShadow = true;
+
+scene.add(mainLight);
+
+
+const frontLight =
+    new THREE.PointLight(
+        0xffffff,
+        1.5,
+        15
+    );
+
+frontLight.position.set(
+    0,
+    2,
+    7
+);
 
 scene.add(frontLight);
 
 
-// إضاءة من اليسار
-const leftLight = new THREE.PointLight(
-    0x00ccff,
-    3,
-    12
-);
+const sideLight =
+    new THREE.PointLight(
+        0xcceeff,
+        1.5,
+        15
+    );
 
-leftLight.position.set(
-    -4,
+sideLight.position.set(
+    -5,
     2,
-    5
+    3
 );
 
-scene.add(leftLight);
-
-
-// إضاءة من اليمين
-const rightLight = new THREE.PointLight(
-    0x00ffcc,
-    2.5,
-    12
-);
-
-rightLight.position.set(
-    4,
-    1,
-    4
-);
-
-scene.add(rightLight);
-
-
-// إضاءة خلفية
-const blueLight = new THREE.PointLight(
-    0x0066ff,
-    2,
-    10
-);
-
-blueLight.position.set(
-    0,
-    0,
-    -4
-);
-
-scene.add(blueLight);
+scene.add(sideLight);
 
 
 // =====================================================
-// 5. Rack Group
+// 5. Floor
 // =====================================================
 
-const rackGroup = new THREE.Group();
+const floorGeometry =
+    new THREE.PlaneGeometry(
+        30,
+        30
+    );
+
+
+const floorMaterial =
+    new THREE.MeshStandardMaterial({
+
+        color: 0xf1f3f5,
+
+        roughness: 0.8,
+
+        metalness: 0
+
+    });
+
+
+const floor =
+    new THREE.Mesh(
+        floorGeometry,
+        floorMaterial
+    );
+
+floor.rotation.x =
+    -Math.PI / 2;
+
+floor.position.y =
+    -4.55;
+
+floor.receiveShadow = true;
+
+scene.add(floor);
+
+
+// =====================================================
+// 6. Rack Group
+// =====================================================
+
+const rackGroup =
+    new THREE.Group();
 
 scene.add(rackGroup);
 
 
 // =====================================================
-// 6. Rack Frame
+// 7. Rack Dimensions
 // =====================================================
 
-const frameGeometry = new THREE.BoxGeometry(
-    2.4,
-    4.4,
-    2.4
-);
+const rackWidth = 3.2;
 
-const frameMaterial = new THREE.MeshBasicMaterial({
-    color: 0x00ffcc,
-    wireframe: true,
-    transparent: true,
-    opacity: 0.45
-});
+const rackHeight = 8.4;
 
-const frame = new THREE.Mesh(
-    frameGeometry,
-    frameMaterial
-);
-
-rackGroup.add(frame);
+const rackDepth = 3.0;
 
 
 // =====================================================
-// 7. Servers
+// 8. Materials
 // =====================================================
 
-const servers = [];
+const frameMaterial =
+    new THREE.MeshStandardMaterial({
 
-const serverGeometry = new THREE.BoxGeometry(
-    2.05,
-    0.38,
-    2.05
-);
+        color: 0x263238,
 
+        metalness: 0.8,
 
-for (let i = 0; i < 6; i++) {
+        roughness: 0.28
 
-    // -------------------------------------------------
-    // Server Material
-    // -------------------------------------------------
-
-    const serverMaterial =
-        new THREE.MeshStandardMaterial({
-
-            color: 0x596273,
-
-            metalness: 0.65,
-
-            roughness: 0.28
-
-        });
+    });
 
 
-    // -------------------------------------------------
-    // Server
-    // -------------------------------------------------
+const panelMaterial =
+    new THREE.MeshStandardMaterial({
 
-    const server = new THREE.Mesh(
-        serverGeometry,
-        serverMaterial
-    );
+        color: 0x37474f,
 
-    server.castShadow = true;
+        metalness: 0.7,
 
-    server.receiveShadow = true;
+        roughness: 0.32
+
+    });
 
 
-    // Position
-    server.position.y =
-        -1.5 + (i * 0.6);
+const darkMaterial =
+    new THREE.MeshStandardMaterial({
+
+        color: 0x172027,
+
+        metalness: 0.75,
+
+        roughness: 0.3
+
+    });
 
 
-    // -------------------------------------------------
-    // Server Data
-    // -------------------------------------------------
+const glassMaterial =
+    new THREE.MeshPhysicalMaterial({
 
-    server.userData.serverNumber =
-        i + 1;
+        color: 0xb8dce8,
 
-    server.userData.unit =
-        i + 1;
+        transparent: true,
 
-    server.userData.status =
-        "Active";
+        opacity: 0.18,
 
-    server.userData.temperature =
-        24;
+        roughness: 0.08,
 
-    server.userData.power =
-        420;
+        metalness: 0.05,
+
+        transmission: 0.05,
+
+        side: THREE.DoubleSide
+
+    });
 
 
-    // -------------------------------------------------
-    // Front Panel
-    // -------------------------------------------------
+// =====================================================
+// 9. Helper Function
+// =====================================================
 
-    const panelGeometry =
+function addBox(
+    width,
+    height,
+    depth,
+    material,
+    x,
+    y,
+    z
+) {
+
+    const geometry =
         new THREE.BoxGeometry(
-            1.85,
-            0.28,
-            0.04
+            width,
+            height,
+            depth
         );
 
-    const panelMaterial =
-        new THREE.MeshStandardMaterial({
 
-            color: 0x252a36,
-
-            metalness: 0.5,
-
-            roughness: 0.35
-
-        });
-
-    const frontPanel =
+    const mesh =
         new THREE.Mesh(
-            panelGeometry,
-            panelMaterial
-        );
-
-    frontPanel.position.set(
-        0,
-        0,
-        1.04
-    );
-
-    server.add(frontPanel);
-
-
-    // -------------------------------------------------
-    // LED
-    // -------------------------------------------------
-
-    const ledGeometry =
-        new THREE.SphereGeometry(
-            0.065,
-            16,
-            16
+            geometry,
+            material
         );
 
 
-    const ledMaterial =
-        new THREE.MeshBasicMaterial({
-            color: 0x00ff33
-        });
-
-
-    const led =
-        new THREE.Mesh(
-            ledGeometry,
-            ledMaterial
-        );
-
-
-    led.position.set(
-        0.82,
-        0,
-        1.08
+    mesh.position.set(
+        x,
+        y,
+        z
     );
 
 
-    server.add(led);
+    mesh.castShadow = true;
+
+    mesh.receiveShadow = true;
 
 
-    server.userData.led =
-        led;
+    rackGroup.add(mesh);
 
 
-    // -------------------------------------------------
-    // Second LED
-    // -------------------------------------------------
-
-    const networkLedMaterial =
-        new THREE.MeshBasicMaterial({
-            color: 0x0088ff
-        });
-
-
-    const networkLed =
-        new THREE.Mesh(
-            ledGeometry,
-            networkLedMaterial
-        );
-
-
-    networkLed.position.set(
-        0.62,
-        0,
-        1.08
-    );
-
-
-    server.add(networkLed);
-
-
-    server.userData.networkLed =
-        networkLed;
-
-
-    // -------------------------------------------------
-    // Add Server
-    // -------------------------------------------------
-
-    rackGroup.add(server);
-
-    servers.push(server);
+    return mesh;
 }
 
 
 // =====================================================
-// 8. Rack Rotation
+// 10. Main Vertical Frame
+// =====================================================
+
+const columnWidth = 0.18;
+
+
+// Front Left
+addBox(
+    columnWidth,
+    rackHeight,
+    columnWidth,
+    frameMaterial,
+
+    -1.51,
+    0,
+    1.38
+);
+
+
+// Front Right
+addBox(
+    columnWidth,
+    rackHeight,
+    columnWidth,
+    frameMaterial,
+
+    1.51,
+    0,
+    1.38
+);
+
+
+// Back Left
+addBox(
+    columnWidth,
+    rackHeight,
+    columnWidth,
+    frameMaterial,
+
+    -1.51,
+    0,
+    -1.38
+);
+
+
+// Back Right
+addBox(
+    columnWidth,
+    rackHeight,
+    columnWidth,
+    frameMaterial,
+
+    1.51,
+    0,
+    -1.38
+);
+
+
+// =====================================================
+// 11. Top
+// =====================================================
+
+addBox(
+    rackWidth,
+    0.22,
+    rackDepth,
+
+    panelMaterial,
+
+    0,
+    4.21,
+    0
+);
+
+
+// =====================================================
+// 12. Bottom
+// =====================================================
+
+addBox(
+    rackWidth,
+    0.25,
+    rackDepth,
+
+    panelMaterial,
+
+    0,
+    -4.21,
+    0
+);
+
+
+// =====================================================
+// 13. Left Side Panel
+// =====================================================
+
+addBox(
+    0.14,
+    8.15,
+    2.72,
+
+    panelMaterial,
+
+    -1.55,
+    0,
+    0
+);
+
+
+// =====================================================
+// 14. Right Side Panel
+// =====================================================
+
+addBox(
+    0.14,
+    8.15,
+    2.72,
+
+    panelMaterial,
+
+    1.55,
+    0,
+    0
+);
+
+
+// =====================================================
+// 15. Back Panel
+// =====================================================
+
+addBox(
+    2.95,
+    8.15,
+    0.14,
+
+    darkMaterial,
+
+    0,
+    0,
+    -1.45
+);
+
+
+// =====================================================
+// 16. Front Door Frame
+// =====================================================
+
+const doorWidth = 3.0;
+
+const doorHeight = 7.9;
+
+
+// Left Door Frame
+addBox(
+    0.16,
+    doorHeight,
+    0.16,
+
+    frameMaterial,
+
+    -1.42,
+    0,
+    1.52
+);
+
+
+// Right Door Frame
+addBox(
+    0.16,
+    doorHeight,
+    0.16,
+
+    frameMaterial,
+
+    1.42,
+    0,
+    1.52
+);
+
+
+// Top Door Frame
+addBox(
+    doorWidth,
+    0.16,
+    0.16,
+
+    frameMaterial,
+
+    0,
+    3.88,
+    1.52
+);
+
+
+// Bottom Door Frame
+addBox(
+    doorWidth,
+    0.16,
+    0.16,
+
+    frameMaterial,
+
+    0,
+    -3.88,
+    1.52
+);
+
+
+// =====================================================
+// 17. Glass Door
+// =====================================================
+
+const glassGeometry =
+    new THREE.BoxGeometry(
+        2.72,
+        7.55,
+        0.035
+    );
+
+
+const glassDoor =
+    new THREE.Mesh(
+        glassGeometry,
+        glassMaterial
+    );
+
+
+glassDoor.position.set(
+    0,
+    0,
+    1.50
+);
+
+
+glassDoor.castShadow = false;
+
+glassDoor.receiveShadow = true;
+
+rackGroup.add(
+    glassDoor
+);
+
+
+// =====================================================
+// 18. Door Handle
+// =====================================================
+
+const handleMaterial =
+    new THREE.MeshStandardMaterial({
+
+        color: 0x111820,
+
+        metalness: 0.9,
+
+        roughness: 0.18
+
+    });
+
+
+addBox(
+    0.12,
+    1.1,
+    0.12,
+
+    handleMaterial,
+
+    1.20,
+    0,
+    1.67
+);
+
+
+addBox(
+    0.25,
+    0.12,
+    0.12,
+
+    handleMaterial,
+
+    1.08,
+    0.52,
+    1.67
+);
+
+
+addBox(
+    0.25,
+    0.12,
+    0.12,
+
+    handleMaterial,
+
+    1.08,
+    -0.52,
+    1.67
+);
+
+
+// =====================================================
+// 19. Door Hinges
+// =====================================================
+
+const hingeMaterial =
+    new THREE.MeshStandardMaterial({
+
+        color: 0x607d8b,
+
+        metalness: 0.8,
+
+        roughness: 0.25
+
+    });
+
+
+for (
+    let i = 0;
+    i < 3;
+    i++
+) {
+
+    const hinge =
+        new THREE.Mesh(
+
+            new THREE.CylinderGeometry(
+                0.07,
+                0.07,
+                0.32,
+                16
+            ),
+
+            hingeMaterial
+        );
+
+
+    hinge.rotation.z =
+        Math.PI / 2;
+
+
+    hinge.position.set(
+        -1.43,
+        2.6 - (i * 2.6),
+        1.62
+    );
+
+
+    rackGroup.add(hinge);
+}
+
+
+// =====================================================
+// 20. Internal Rack Rails
+// =====================================================
+
+const railMaterial =
+    new THREE.MeshStandardMaterial({
+
+        color: 0x111820,
+
+        metalness: 0.85,
+
+        roughness: 0.25
+
+    });
+
+
+// Left rail
+addBox(
+    0.12,
+    7.8,
+    0.12,
+
+    railMaterial,
+
+    -1.28,
+    0,
+    1.20
+);
+
+
+// Right rail
+addBox(
+    0.12,
+    7.8,
+    0.12,
+
+    railMaterial,
+
+    1.28,
+    0,
+    1.20
+);
+
+
+// =====================================================
+// 21. Rack Rail Holes
+// =====================================================
+
+const holeMaterial =
+    new THREE.MeshBasicMaterial({
+
+        color: 0x78909c
+
+    });
+
+
+const unitHeight =
+    rackHeight / 42;
+
+
+for (
+    let i = 0;
+    i < 42;
+    i++
+) {
+
+    const y =
+        -3.95 +
+        (i * unitHeight);
+
+
+    // Left hole
+    const leftHole =
+        new THREE.Mesh(
+
+            new THREE.BoxGeometry(
+                0.025,
+                0.035,
+                0.025
+            ),
+
+            holeMaterial
+        );
+
+
+    leftHole.position.set(
+        -1.28,
+        y,
+        1.28
+    );
+
+
+    rackGroup.add(
+        leftHole
+    );
+
+
+    // Right hole
+    const rightHole =
+        new THREE.Mesh(
+
+            new THREE.BoxGeometry(
+                0.025,
+                0.035,
+                0.025
+            ),
+
+            holeMaterial
+        );
+
+
+    rightHole.position.set(
+        1.28,
+        y,
+        1.28
+    );
+
+
+    rackGroup.add(
+        rightHole
+    );
+}
+
+
+// =====================================================
+// 22. Top Ventilation
+// =====================================================
+
+const ventMaterial =
+    new THREE.MeshStandardMaterial({
+
+        color: 0x101820,
+
+        metalness: 0.7,
+
+        roughness: 0.4
+
+    });
+
+
+for (
+    let i = 0;
+    i < 5;
+    i++
+) {
+
+    addBox(
+        0.35,
+        0.04,
+        1.0,
+
+        ventMaterial,
+
+        -0.85 + (i * 0.42),
+        4.34,
+        0
+    );
+}
+
+
+// =====================================================
+// 23. Bottom Feet
+// =====================================================
+
+const footMaterial =
+    new THREE.MeshStandardMaterial({
+
+        color: 0x111820,
+
+        metalness: 0.85,
+
+        roughness: 0.3
+
+    });
+
+
+const footPositions = [
+    [-1.25, -4.45, 1.1],
+    [1.25, -4.45, 1.1],
+    [-1.25, -4.45, -1.1],
+    [1.25, -4.45, -1.1]
+];
+
+
+footPositions.forEach(
+    function (position) {
+
+        addBox(
+            0.35,
+            0.35,
+            0.35,
+
+            footMaterial,
+
+            position[0],
+            position[1],
+            position[2]
+        );
+
+    }
+);
+
+
+// =====================================================
+// 24. Front Status Light
+// =====================================================
+
+const statusLight =
+    new THREE.Mesh(
+
+        new THREE.SphereGeometry(
+            0.07,
+            16,
+            16
+        ),
+
+        new THREE.MeshBasicMaterial({
+            color: 0x00cc88
+        })
+    );
+
+
+statusLight.position.set(
+    -1.18,
+    3.65,
+    1.64
+);
+
+
+rackGroup.add(
+    statusLight
+);
+
+
+// =====================================================
+// 25. Mouse Rotation
 // =====================================================
 
 let isDragging = false;
 
 let hasDragged = false;
+
 
 let previousMousePosition = {
     x: 0,
@@ -398,6 +918,7 @@ window.addEventListener(
             event.clientX -
             previousMousePosition.x;
 
+
         const deltaY =
             event.clientY -
             previousMousePosition.y;
@@ -413,19 +934,16 @@ window.addEventListener(
         }
 
 
-        // دوران أفقي
         rackGroup.rotation.y +=
-            deltaX * 0.008;
+            deltaX * 0.006;
 
 
-        // دوران رأسي
         rackGroup.rotation.x +=
-            deltaY * 0.008;
+            deltaY * 0.004;
 
 
-        // منع الانقلاب
         const maxRotation =
-            Math.PI / 3;
+            Math.PI / 5;
 
 
         rackGroup.rotation.x =
@@ -469,215 +987,11 @@ window.addEventListener(
 
 
 // =====================================================
-// 9. Raycaster
+// 26. Animation
 // =====================================================
 
-const raycaster =
-    new THREE.Raycaster();
+let time = 0;
 
-const mouse =
-    new THREE.Vector2();
-
-
-window.addEventListener(
-    "click",
-    function (event) {
-
-        // لا تعتبر السحب Click
-        if (hasDragged) {
-
-            hasDragged = false;
-
-            return;
-
-        }
-
-
-        // Mouse coordinates
-        mouse.x =
-            (event.clientX /
-                window.innerWidth) * 2 - 1;
-
-
-        mouse.y =
-            -(event.clientY /
-                window.innerHeight) * 2 + 1;
-
-
-        // Ray
-        raycaster.setFromCamera(
-            mouse,
-            camera
-        );
-
-
-        // البحث عن السيرفر
-        const intersects =
-            raycaster.intersectObjects(
-                servers,
-                false
-            );
-
-
-        if (intersects.length === 0) {
-
-            return;
-
-        }
-
-
-        const clickedServer =
-            intersects[0].object;
-
-
-        // -------------------------------------------------
-        // Reset
-        // -------------------------------------------------
-
-        servers.forEach(
-            function (server) {
-
-                server.material.color.setHex(
-                    0x596273
-                );
-
-            }
-        );
-
-
-        // -------------------------------------------------
-        // Highlight
-        // -------------------------------------------------
-
-        clickedServer.material.color.setHex(
-            0x00ffcc
-        );
-
-
-        // -------------------------------------------------
-        // Information
-        // -------------------------------------------------
-
-        const serverNumber =
-            clickedServer.userData.serverNumber;
-
-        const unit =
-            clickedServer.userData.unit;
-
-        const status =
-            clickedServer.userData.status;
-
-        const temperature =
-            clickedServer.userData.temperature;
-
-        const power =
-            clickedServer.userData.power;
-
-
-        const desc =
-            document.getElementById(
-                "desc"
-            );
-
-
-        if (desc) {
-
-            desc.innerHTML =
-                "<strong>Server " +
-                serverNumber +
-                "</strong><br>" +
-
-                "Rack Unit: " +
-                unit +
-                "U<br>" +
-
-                "الحالة: " +
-                status +
-                "<br>" +
-
-                "الحرارة: " +
-                temperature +
-                "°C<br>" +
-
-                "الطاقة: " +
-                power +
-                "W";
-
-        }
-
-    }
-);
-
-
-// =====================================================
-// 10. LED Animation
-// =====================================================
-
-let ledTime = 0;
-
-
-function animateLEDs() {
-
-    ledTime += 0.05;
-
-
-    servers.forEach(
-        function (server, index) {
-
-            const led =
-                server.userData.led;
-
-
-            const networkLed =
-                server.userData.networkLed;
-
-
-            if (led) {
-
-                const pulse =
-                    0.85 +
-                    Math.sin(
-                        ledTime * 2 +
-                        index
-                    ) * 0.15;
-
-
-                led.scale.set(
-                    pulse,
-                    pulse,
-                    pulse
-                );
-
-            }
-
-
-            if (networkLed) {
-
-                const networkPulse =
-                    0.75 +
-                    Math.sin(
-                        ledTime * 3 +
-                        index
-                    ) * 0.25;
-
-
-                networkLed.scale.set(
-                    networkPulse,
-                    networkPulse,
-                    networkPulse
-                );
-
-            }
-
-        }
-    );
-
-}
-
-
-// =====================================================
-// 11. Animation
-// =====================================================
 
 function animate() {
 
@@ -686,7 +1000,20 @@ function animate() {
     );
 
 
-    animateLEDs();
+    time += 0.03;
+
+
+    // Status light pulse
+    const pulse =
+        0.8 +
+        Math.sin(time * 2) * 0.2;
+
+
+    statusLight.scale.set(
+        pulse,
+        pulse,
+        pulse
+    );
 
 
     renderer.render(
@@ -701,7 +1028,7 @@ animate();
 
 
 // =====================================================
-// 12. Resize
+// 27. Resize
 // =====================================================
 
 window.addEventListener(

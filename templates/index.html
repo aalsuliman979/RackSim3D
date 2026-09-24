@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 
@@ -9,94 +8,114 @@
     <title>RackSim 3D</title>
 
     <style>
+
         * {
             box-sizing: border-box;
         }
 
-        body,
-        html {
+        html,
+        body {
             margin: 0;
             padding: 0;
+
             width: 100%;
             height: 100%;
+
             overflow: hidden;
-            background-color: #0d0e15;
-            font-family: sans-serif;
+
+            background-color: #ffffff;
+
+            font-family: Arial, sans-serif;
         }
+
 
         canvas {
             display: block;
+
             width: 100vw;
             height: 100vh;
+
             position: absolute;
+
             top: 0;
             left: 0;
+
             z-index: 1;
         }
 
+
         #info-panel {
+
             position: absolute;
+
             top: 20px;
             right: 20px;
 
-            background: rgba(0, 0, 0, 0.85);
+            width: 300px;
 
-            padding: 15px 20px;
+            padding: 18px 20px;
 
-            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.95);
 
-            border: 1px solid #00ffcc;
+            border-radius: 10px;
+
+            border: 2px solid #00bfa5;
 
             box-shadow:
-                0 0 10px rgba(0, 255, 204, 0.3);
+                0 4px 20px rgba(0, 0, 0, 0.15);
 
-            color: white;
+            color: #222;
 
             z-index: 10;
-
-            width: 280px;
         }
+
 
         h2 {
-            margin: 0 0 8px 0;
 
-            color: #00ffcc;
+            margin: 0 0 10px 0;
 
-            font-size: 18px;
+            color: #009f89;
+
+            font-size: 20px;
         }
+
 
         p {
+
             margin: 0;
 
-            font-size: 13px;
+            font-size: 14px;
 
-            line-height: 1.4;
+            line-height: 1.6;
 
-            color: #ddd;
+            color: #333;
         }
+
     </style>
 
-    <!-- Three.js -->
+
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 
 </head>
 
+
 <body>
 
-    <!-- Information Panel -->
+
     <div id="info-panel">
 
         <h2>RackSim 3D</h2>
 
         <p id="desc">
-            مرحباً بك! اسحب بالماوس لتدوير الكابينة وانقر على وحدات السيرفر للتفاعل.
+            مرحباً بك! اسحب بالماوس لتدوير الكابينة
+            وانقر على السيرفر للتفاعل.
         </p>
 
     </div>
 
-    <!-- Main JavaScript -->
-<script src="{{ url_for('static', filename='js/main.js') }}?v=2"></script>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}?v=3"></script>
+
 </body>
 
 </html>
-```
