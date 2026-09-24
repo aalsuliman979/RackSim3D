@@ -1,5 +1,5 @@
 // ==========================================
-// RackSim 3D - Rack Cabinet
+// RackSim 3D - Rack Cabinet + Servers
 // ==========================================
 
 // Scene
@@ -46,6 +46,7 @@ const ambientLight = new THREE.AmbientLight(0xffffff, 0.75);
 scene.add(ambientLight);
 
 const mainLight = new THREE.DirectionalLight(0xffffff, 1.2);
+
 mainLight.position.set(5, 10, 8);
 mainLight.castShadow = true;
 
@@ -55,7 +56,9 @@ mainLight.shadow.mapSize.height = 2048;
 scene.add(mainLight);
 
 const fillLight = new THREE.DirectionalLight(0xffffff, 0.5);
+
 fillLight.position.set(-6, 5, 3);
+
 scene.add(fillLight);
 
 // ==========================================
@@ -77,6 +80,7 @@ const floor = new THREE.Mesh(
 
 floor.rotation.x = -Math.PI / 2;
 floor.position.y = -4.25;
+
 floor.receiveShadow = true;
 
 scene.add(floor);
@@ -125,7 +129,7 @@ const blackMetal = new THREE.MeshStandardMaterial({
 const glassMaterial = new THREE.MeshPhysicalMaterial({
     color: 0x9fd4e8,
     transparent: true,
-    opacity: 0.16,
+    opacity: 0.10,
     roughness: 0.05,
     metalness: 0.1
 });
@@ -169,7 +173,6 @@ function createBox(
 // Rack Main Frame
 // ==========================================
 
-// Left vertical frame
 createBox(
     0.22,
     rackHeight,
@@ -180,7 +183,6 @@ createBox(
     rackFrontZ
 );
 
-// Right vertical frame
 createBox(
     0.22,
     rackHeight,
@@ -191,7 +193,6 @@ createBox(
     rackFrontZ
 );
 
-// Back vertical supports
 createBox(
     0.18,
     rackHeight,
@@ -358,8 +359,6 @@ createBox(
     rackFrontZ + 0.22
 );
 
-// Handle supports
-
 createBox(
     0.16,
     0.08,
@@ -439,8 +438,6 @@ createBox(
     0,
     rackFrontZ - 0.15
 );
-
-// Back rails
 
 createBox(
     0.10,
@@ -557,17 +554,12 @@ function createTextSprite(text) {
     return sprite;
 }
 
-// ==========================================
-// Add U labels
-// ==========================================
-
 for (let i = 0; i < units; i++) {
 
     const uNumber = i + 1;
 
     const y = firstU + i * unitHeight;
 
-    // Left label
     const leftLabel = createTextSprite("U" + uNumber);
 
     leftLabel.position.set(
@@ -578,7 +570,6 @@ for (let i = 0; i < units; i++) {
 
     rackGroup.add(leftLabel);
 
-    // Right label
     const rightLabel = createTextSprite("U" + uNumber);
 
     rightLabel.position.set(
@@ -589,6 +580,496 @@ for (let i = 0; i < units; i++) {
 
     rackGroup.add(rightLabel);
 }
+
+// ==========================================
+// SERVER SYSTEM
+// ==========================================
+
+const servers = [];
+let selectedServer = null;
+
+// Server materials
+
+const serverBodyMaterial = new THREE.MeshStandardMaterial({
+    color: 0x20252a,
+    metalness: 0.75,
+    roughness: 0.32
+});
+
+const serverFrontMaterial = new THREE.MeshStandardMaterial({
+    color: 0x111518,
+    metalness: 0.8,
+    roughness: 0.28
+});
+
+const serverAccentMaterial = new THREE.MeshStandardMaterial({
+    color: 0x303840,
+    metalness: 0.7,
+    roughness: 0.3
+});
+
+const ledGreenMaterial = new THREE.MeshStandardMaterial({
+    color: 0x00d084,
+    emissive: 0x00d084,
+    emissiveIntensity: 2
+});
+
+const ledBlueMaterial = new THREE.MeshStandardMaterial({
+    color: 0x2196f3,
+    emissive: 0x2196f3,
+    emissiveIntensity: 2
+});
+
+const ledRedMaterial = new THREE.MeshStandardMaterial({
+    color: 0xff3b30,
+    emissive: 0xff3b30,
+    emissiveIntensity: 2
+});
+
+// ==========================================
+// Create Server
+// ==========================================
+
+function createServer(name, startU, heightU, status) {
+
+    const serverGroup = new THREE.Group();
+
+    const height = unitHeight * heightU - 0.025;
+
+    const width = 2.42;
+    const depth = 2.30;
+
+    // Server body
+    const bodyGeometry = new THREE.BoxGeometry(
+        width,
+        height,
+        depth
+    );
+
+    const body = new THREE.Mesh(
+        bodyGeometry,
+        serverBodyMaterial
+    );
+
+    body.castShadow = true;
+    body.receiveShadow = true;
+
+    serverGroup.add(body);
+
+    // Front panel
+    const frontGeometry = new THREE.BoxGeometry(
+        width - 0.08,
+        height - 0.08,
+        0.08
+    );
+
+    const front = new THREE.Mesh(
+        frontGeometry,
+        serverFrontMaterial
+    );
+
+    front.position.z = depth / 2 + 0.015;
+
+    serverGroup.add(front);
+
+    // Front left accent
+    const accentGeometry = new THREE.BoxGeometry(
+        0.08,
+        height - 0.12,
+        0.05
+    );
+
+    const accent = new THREE.Mesh(
+        accentGeometry,
+        serverAccentMaterial
+    );
+
+    accent.position.set(
+        -width / 2 + 0.10,
+        0,
+        depth / 2 + 0.065
+    );
+
+    serverGroup.add(accent);
+
+    // ======================================
+    // Ventilation slots
+    // ======================================
+
+    const slotMaterial = new THREE.MeshStandardMaterial({
+        color: 0x050505,
+        metalness: 0.4,
+        roughness: 0.5
+    });
+
+    const slotCount = heightU >= 2 ? 12 : 8;
+
+    for (let i = 0; i < slotCount; i++) {
+
+        const slotGeometry = new THREE.BoxGeometry(
+            0.035,
+            height * 0.42,
+            0.025
+        );
+
+        const slot = new THREE.Mesh(
+            slotGeometry,
+            slotMaterial
+        );
+
+        slot.position.set(
+            -0.55 + i * 0.10,
+            0,
+            depth / 2 + 0.075
+        );
+
+        serverGroup.add(slot);
+    }
+
+    // ======================================
+    // LEDs
+    // ======================================
+
+    function addLED(x, material) {
+
+        const geometry = new THREE.SphereGeometry(
+            0.035,
+            10,
+            10
+        );
+
+        const led = new THREE.Mesh(
+            geometry,
+            material
+        );
+
+        led.position.set(
+            x,
+            height * 0.28,
+            depth / 2 + 0.085
+        );
+
+        serverGroup.add(led);
+    }
+
+    addLED(0.78, ledGreenMaterial);
+    addLED(0.90, ledBlueMaterial);
+
+    if (status === "warning") {
+        addLED(1.02, ledRedMaterial);
+    }
+
+    // ======================================
+    // Server Label
+    // ======================================
+
+    const label = createTextSprite(name);
+
+    label.scale.set(0.55, 0.16, 1);
+
+    label.position.set(
+        0.52,
+        -height * 0.22,
+        depth / 2 + 0.11
+    );
+
+    serverGroup.add(label);
+
+    // ======================================
+    // Server metadata
+    // ======================================
+
+    serverGroup.userData = {
+        type: "server",
+        name: name,
+        startU: startU,
+        heightU: heightU,
+        status: status,
+        power: status === "warning" ? "620 W" : "480 W",
+        temperature: status === "warning" ? "31°C" : "24°C"
+    };
+
+    // ======================================
+    // Position Server
+    // ======================================
+
+    const centerU = startU + (heightU - 1) / 2;
+
+    const y =
+        firstU +
+        centerU * unitHeight;
+
+    serverGroup.position.set(
+        0,
+        y,
+        rackFrontZ - 0.35
+    );
+
+    // ======================================
+    // Add to Rack
+    // ======================================
+
+    rackGroup.add(serverGroup);
+
+    servers.push(serverGroup);
+
+    return serverGroup;
+}
+
+// ==========================================
+// Add Servers
+// ==========================================
+
+createServer(
+    "SERVER-01",
+    3,
+    1,
+    "active"
+);
+
+createServer(
+    "SERVER-02",
+    6,
+    2,
+    "active"
+);
+
+createServer(
+    "SERVER-03",
+    11,
+    1,
+    "active"
+);
+
+createServer(
+    "SERVER-04",
+    15,
+    2,
+    "warning"
+);
+
+createServer(
+    "SERVER-05",
+    21,
+    1,
+    "active"
+);
+
+createServer(
+    "SERVER-06",
+    26,
+    2,
+    "active"
+);
+
+// ==========================================
+// Server Selection
+// ==========================================
+
+function selectServer(server) {
+
+    // Remove previous selection
+    if (selectedServer) {
+
+        selectedServer.children.forEach(child => {
+
+            if (
+                child.isMesh &&
+                child.material &&
+                child.material.emissive
+            ) {
+                child.material.emissive.setHex(0x000000);
+            }
+        });
+    }
+
+    selectedServer = server;
+
+    // Highlight
+    if (selectedServer) {
+
+        selectedServer.children.forEach(child => {
+
+            if (
+                child.isMesh &&
+                child.material &&
+                child.material.emissive
+            ) {
+
+                child.material.emissive.setHex(
+                    0x006655
+                );
+            }
+        });
+
+        updateInfoPanel(
+            selectedServer.userData
+        );
+    }
+}
+
+// ==========================================
+// Info Panel
+// ==========================================
+
+const infoPanel = document.createElement("div");
+
+infoPanel.id = "server-info-panel";
+
+infoPanel.style.position = "absolute";
+infoPanel.style.right = "20px";
+infoPanel.style.top = "150px";
+infoPanel.style.width = "280px";
+
+infoPanel.style.padding = "18px";
+
+infoPanel.style.background =
+    "rgba(255,255,255,0.96)";
+
+infoPanel.style.border =
+    "2px solid #00bfa5";
+
+infoPanel.style.borderRadius = "10px";
+
+infoPanel.style.boxShadow =
+    "0 4px 20px rgba(0,0,0,0.12)";
+
+infoPanel.style.fontFamily =
+    "Arial, sans-serif";
+
+infoPanel.style.zIndex = "15";
+
+infoPanel.innerHTML = `
+    <div style="
+        color:#009f89;
+        font-size:18px;
+        font-weight:bold;
+        margin-bottom:10px;
+    ">
+        Server Information
+    </div>
+
+    <div id="server-info-content" style="
+        color:#333;
+        font-size:14px;
+        line-height:1.8;
+    ">
+        اختر Server لعرض معلوماته
+    </div>
+`;
+
+document.body.appendChild(infoPanel);
+
+// ==========================================
+// Update Info Panel
+// ==========================================
+
+function updateInfoPanel(data) {
+
+    const content =
+        document.getElementById(
+            "server-info-content"
+        );
+
+    if (!content) return;
+
+    content.innerHTML = `
+        <strong>${data.name}</strong><br>
+        U Position: U${data.startU} - U${data.startU + data.heightU - 1}<br>
+        Size: ${data.heightU}U<br>
+        Status:
+        <span style="
+            color:${data.status === "warning"
+                ? "#e67e22"
+                : "#00a884"};
+            font-weight:bold;
+        ">
+            ${data.status.toUpperCase()}
+        </span>
+        <br>
+        Power: ${data.power}<br>
+        Temperature: ${data.temperature}
+    `;
+}
+
+// ==========================================
+// Raycaster
+// ==========================================
+
+const raycaster = new THREE.Raycaster();
+
+const mouse = new THREE.Vector2();
+
+let mouseDownX = 0;
+let mouseDownY = 0;
+
+renderer.domElement.addEventListener(
+    "pointerdown",
+    function(event) {
+
+        mouseDownX = event.clientX;
+        mouseDownY = event.clientY;
+    }
+);
+
+renderer.domElement.addEventListener(
+    "pointerup",
+    function(event) {
+
+        const movementX =
+            Math.abs(event.clientX - mouseDownX);
+
+        const movementY =
+            Math.abs(event.clientY - mouseDownY);
+
+        // Only click if mouse barely moved
+        if (
+            movementX > 5 ||
+            movementY > 5
+        ) {
+            return;
+        }
+
+        mouse.x =
+            (event.clientX /
+                window.innerWidth) * 2 - 1;
+
+        mouse.y =
+            -(event.clientY /
+                window.innerHeight) * 2 + 1;
+
+        raycaster.setFromCamera(
+            mouse,
+            camera
+        );
+
+        const intersects =
+            raycaster.intersectObjects(
+                servers,
+                true
+            );
+
+        if (intersects.length > 0) {
+
+            let object =
+                intersects[0].object;
+
+            while (
+                object.parent &&
+                object.parent !== rackGroup
+            ) {
+                object = object.parent;
+            }
+
+            if (
+                object.userData &&
+                object.userData.type === "server"
+            ) {
+                selectServer(object);
+            }
+        }
+    }
+);
 
 // ==========================================
 // Top Ventilation
@@ -629,7 +1110,6 @@ feetPositions.forEach(position => {
         position[1],
         position[2]
     );
-
 });
 
 // ==========================================
@@ -709,11 +1189,11 @@ renderer.domElement.addEventListener(
         previousMouseX = event.clientX;
         previousMouseY = event.clientY;
 
-        // Horizontal = 360°
-        rackGroup.rotation.y += deltaX * 0.008;
+        rackGroup.rotation.y +=
+            deltaX * 0.008;
 
-        // Vertical
-        rackGroup.rotation.x += deltaY * 0.005;
+        rackGroup.rotation.x +=
+            deltaY * 0.005;
 
         rackGroup.rotation.x = Math.max(
             minVerticalRotation,
@@ -723,8 +1203,11 @@ renderer.domElement.addEventListener(
             )
         );
 
-        rotationVelocityX = deltaX * 0.008;
-        rotationVelocityY = deltaY * 0.005;
+        rotationVelocityX =
+            deltaX * 0.008;
+
+        rotationVelocityY =
+            deltaY * 0.005;
     }
 );
 
@@ -735,9 +1218,11 @@ renderer.domElement.addEventListener(
         isDragging = false;
 
         try {
+
             renderer.domElement.releasePointerCapture(
                 event.pointerId
             );
+
         } catch (error) {
             // Ignore
         }
@@ -769,7 +1254,10 @@ renderer.domElement.addEventListener(
 
         camera.position.z = Math.max(
             4.5,
-            Math.min(14, camera.position.z)
+            Math.min(
+                14,
+                camera.position.z
+            )
         );
 
     },
@@ -780,35 +1268,54 @@ renderer.domElement.addEventListener(
 // Reset View Button
 // ==========================================
 
-const resetButton = document.createElement("button");
+const resetButton =
+    document.createElement("button");
 
-resetButton.innerText = "↻ Reset View";
+resetButton.innerText =
+    "↻ Reset View";
 
-resetButton.style.position = "absolute";
-resetButton.style.left = "20px";
-resetButton.style.top = "20px";
+resetButton.style.position =
+    "absolute";
 
-resetButton.style.padding = "10px 16px";
+resetButton.style.left =
+    "20px";
 
-resetButton.style.background = "#ffffff";
-resetButton.style.border = "2px solid #00bfa5";
+resetButton.style.top =
+    "20px";
 
-resetButton.style.borderRadius = "8px";
+resetButton.style.padding =
+    "10px 16px";
 
-resetButton.style.color = "#008f7c";
+resetButton.style.background =
+    "#ffffff";
 
-resetButton.style.fontSize = "14px";
+resetButton.style.border =
+    "2px solid #00bfa5";
 
-resetButton.style.fontWeight = "bold";
+resetButton.style.borderRadius =
+    "8px";
 
-resetButton.style.cursor = "pointer";
+resetButton.style.color =
+    "#008f7c";
 
-resetButton.style.zIndex = "20";
+resetButton.style.fontSize =
+    "14px";
+
+resetButton.style.fontWeight =
+    "bold";
+
+resetButton.style.cursor =
+    "pointer";
+
+resetButton.style.zIndex =
+    "20";
 
 resetButton.style.boxShadow =
     "0 3px 12px rgba(0,0,0,0.12)";
 
-document.body.appendChild(resetButton);
+document.body.appendChild(
+    resetButton
+);
 
 // ==========================================
 // Reset Function
@@ -833,6 +1340,19 @@ resetButton.addEventListener(
             0.2,
             0
         );
+
+        selectedServer = null;
+
+        const content =
+            document.getElementById(
+                "server-info-content"
+            );
+
+        if (content) {
+
+            content.innerHTML =
+                "اختر Server لعرض معلوماته";
+        }
     }
 );
 
@@ -865,7 +1385,6 @@ function animate() {
 
     requestAnimationFrame(animate);
 
-    // Small inertia after dragging
     if (!isDragging) {
 
         rackGroup.rotation.y +=
